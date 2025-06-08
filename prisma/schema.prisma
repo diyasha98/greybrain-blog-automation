@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model BlogPost {
+  id           String      @id @default(uuid())
+  title        String
+  content      String
+  status       PostStatus  @default(PENDING)
+  topic        Topic       @relation(fields: [topicId], references: [id])
+  topicId      String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  newsletter   Newsletter? @relation(fields: [newsletterId], references: [id])
+  newsletterId String?
+}
+
+model Topic {
+  id        String      @id @default(uuid())
+  name      String      @unique
+  status    TopicStatus @default(AVAILABLE)
+  source    TopicSource @default(GENERATED)
+  blogPosts BlogPost[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Newsletter {
+  id           String           @id @default(uuid())
+  subject      String
+  content      String
+  status       NewsletterStatus @default(DRAFT)
+  scheduledFor DateTime?
+  sentAt       DateTime?
+  blogPosts    BlogPost[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+}
+
+enum PostStatus {
+  PENDING
+  APPROVED
+  PUBLISHED
+  REJECTED
+  DELETED
+}
+
+enum TopicStatus {
+  AVAILABLE
+  USED
+  ARCHIVED
+}
+
+enum TopicSource {
+  GENERATED
+  CUSTOM
+  TRENDING
+}
+
+enum NewsletterStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  FAILED
+}

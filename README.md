@@ -1,1 +1,1 @@
-# greybrain-blog-automation
+# Skids Newsletter Automation

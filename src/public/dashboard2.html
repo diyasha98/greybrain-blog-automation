@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GreyBrain Blog Automation</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: #f8f9fa;
+        color: #333;
+      }
+      .navbar {
+        background-color: #343a40;
+      }
+      .navbar-brand {
+        font-weight: bold;
+        color: white;
+      }
+      .card {
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        border: none;
+      }
+      .card-header {
+        background-color: #f1f3f5;
+        border-bottom: 1px solid #e9ecef;
+        font-weight: 600;
+      }
+      .btn-primary {
+        background-color: #4b70e2;
+        border: none;
+      }
+      .btn-success {
+        background-color: #28a745;
+        border: none;
+      }
+      .content-preview {
+        max-height: 300px;
+        overflow-y: auto;
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 4px;
+        font-family: monospace;
+      }
+      .status-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+      }
+      .blog-list-item {
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .blog-list-item:hover {
+        background-color: #f1f3f5;
+      }
+      .badge-pending {
+        background-color: #ffc107;
+        color: #212529;
+      }
+      .badge-approved {
+        background-color: #17a2b8;
+        color: white;
+      }
+      .badge-published {
+        background-color: #28a745;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="#">GreyBrain.ai Blog Automation</a>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+        <!-- Left Column: Blog Generation and Topics -->
+        <div class="col-md-5">
+          <div class="card">
+            <div class="card-header">Generate New Blog Post</div>
+            <div class="card-body">
+              <form id="generateForm">
+                <div class="mb-3">
+                  <label for="topicInput" class="form-label">Blog Topic</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="topicInput"
+                    placeholder="Enter a specific topic"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label"
+                    >Or select from suggested topics:</label
+                  >
+                  <div id="suggestedTopics" class="list-group mb-3">
+                    <!-- Suggested topics will be populated here -->
+                    <div class="text-center p-2 text-muted">
+                      <small>Loading suggested topics...</small>
+                    </div>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                  Generate Blog Post
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">Generation Status</div>
+            <div class="card-body">
+              <div id="generationStatus">
+                <p class="text-muted">No active generation</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Topic Management Section -->
+          <div class="card">
+            <div class="card-header">Topic Management</div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label class="form-label">Cached Topics</label>
+                <div
+                  class="d-flex justify-content-between align-items-center mb-2"
+                >
+                  <button class="btn btn-sm btn-primary" id="generateTopicsBtn">
+                    Generate New Topics
+                  </button>
+                  <span class="text-muted small" id="topicsCount"></span>
+                </div>
+                <div id="cachedTopics" class="list-group mb-3">
+                  <!-- Cached topics will be populated here -->
+                  <div class="text-center p-2 text-muted">
+                    <small>Loading cached topics...</small>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="customTopicInput" class="form-label"
+                  >Add Custom Topic</label
+                >
+                <div class="input-group">
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="customTopicInput"
+                    placeholder="Enter a custom topic"
+                  />
+                  <button
+                    class="btn btn-outline-primary"
+                    id="addCustomTopicBtn"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Trending Topics</label>
+                <div id="trendingTopics" class="list-group">
+                  <!-- Trending topics will be populated here -->
+                  <div class="text-center p-2 text-muted">
+                    <small>Loading trending topics...</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          
+        </div>
+
+        <!-- Right Column: Content Management -->
+        <div class="col-md-7">
+          <div class="card">
+            <div class="card-header">
+              <ul class="nav nav-tabs card-header-tabs" id="contentTabs">
+                <li class="nav-item">
+                  <a
+                    class="nav-link active"
+                    data-bs-toggle="tab"
+                    href="#pending"
+                    >Pending</a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" data-bs-toggle="tab" href="#approved"
+                    >Approved</a
+                  >
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" data-bs-toggle="tab" href="#published"
+                    >Published</a
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="card-body">
+              <div class="tab-content">
+                <div class="tab-pane fade show active" id="pending">
+                  <div id="pendingList" class="list-group">
+                    <!-- Pending posts will be listed here -->
+                    <div class="text-center p-3 text-muted">
+                      <small>Loading pending posts...</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="tab-pane fade" id="approved">
+                  <div id="approvedList" class="list-group">
+                    <!-- Approved posts will be listed here -->
+                    <div class="text-center p-3 text-muted">
+                      <small>Loading approved posts...</small>
+                    </div>
+                  </div>
+                </div>
+                <div class="tab-pane fade" id="published">
+                  <div id="publishedList" class="list-group">
+                    <!-- Published posts will be listed here -->
+                    <div class="text-center p-3 text-muted">
+                      <small>Loading published posts...</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Preview Card -->
+          <div class="card">
+            <div class="card-header">Content Preview</div>
+            <div class="card-body">
+              <div id="contentPreview" class="content-preview">
+                <p class="text-muted text-center">
+                  Select a blog post to preview
+                </p>
+              </div>
+              <div id="contentActions" class="mt-3 d-none">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <span id="currentStatus" class="badge bg-secondary me-2"
+                      >Status</span
+                    >
+                    <span id="currentFilename" class="text-muted small"></span>
+                  </div>
+                  <div>
+                    <button
+                      id="approveButton"
+                      class="btn btn-sm btn-primary d-none"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      id="publishButton"
+                      class="btn btn-sm btn-success d-none"
+                    >
+                      Publish
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment-timezone@0.5.43/builds/moment-timezone-with-data.min.js"></script>
+
+    <script>
+      // Current state
+      let currentFilename = null;
+      let currentStatus = null;
+
+      // Helper function to create a loading indicator
+      function showLoading(element, message = "Loading...") {
+        element.innerHTML = `<div class="text-center p-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> <span class="ms-2">${message}</span></div>`;
+      }
+
+      // Helper function to show an error message
+      function showError(element, message) {
+        element.innerHTML = `<div class="alert alert-danger">${message}</div>`;
+      }
+
+      // Load all blog posts
+      async function loadPosts() {
+        try {
+          const response = await fetch("/api/blogs");
+          if (!response.ok) throw new Error("Failed to fetch posts");
+
+          const data = await response.json();
+
+          // Update the lists
+          updatePostList("pendingList", data.pending);
+          updatePostList("approvedList", data.approved);
+          updatePostList("publishedList", data.published);
+        } catch (error) {
+          console.error("Error loading posts:", error);
+          showError(
+            document.getElementById("pendingList"),
+            "Failed to load posts: " + error.message
+          );
+        }
+      }
+
+      // Update a post list with data
+      function updatePostList(listId, posts) {
+        const listElement = document.getElementById(listId);
+
+        if (posts.length === 0) {
+          listElement.innerHTML =
+            '<p class="text-center text-muted p-3">No posts available</p>';
+          return;
+        }
+
+        listElement.innerHTML = "";
+
+        posts.forEach((post) => {
+          // Extract a title from the filename
+          const titleText = post.filename
+            .replace(/\.md$/, "")
+            .replace(/-\d+$/, "") // Remove timestamp
+            .split("-")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+
+          const listItem = document.createElement("a");
+          listItem.href = "#";
+          listItem.className =
+            "list-group-item list-group-item-action blog-list-item d-flex justify-content-between align-items-center";
+          listItem.innerHTML = `
+          <div>${titleText}</div>
+          <span class="badge status-badge badge-${post.status}">${post.status}</span>
+        `;
+
+          listItem.addEventListener("click", (e) => {
+            e.preventDefault();
+            loadPostContent(post.filename, post.status);
+          });
+
+          listElement.appendChild(listItem);
+        });
+      }
+
+      // Load post content
+      async function loadPostContent(filename, status) {
+        currentFilename = filename;
+        currentStatus = status;
+
+        const previewElement = document.getElementById("contentPreview");
+        showLoading(previewElement, "Loading content...");
+
+        try {
+          const response = await fetch(
+            `/api/posts/${filename}?status=${status}`
+          );
+          if (!response.ok) throw new Error("Failed to fetch post content");
+
+          const content = await response.text();
+
+          // Use marked.js to render Markdown
+          previewElement.innerHTML = marked.parse(content);
+
+          // Update UI elements
+          document.getElementById("currentStatus").textContent = status;
+          document.getElementById(
+            "currentStatus"
+          ).className = `badge badge-${status} status-badge`;
+          document.getElementById("currentFilename").textContent = filename;
+
+          // Show appropriate buttons
+          const actionsDiv = document.getElementById("contentActions");
+          actionsDiv.classList.remove("d-none");
+
+          const approveButton = document.getElementById("approveButton");
+          const publishButton = document.getElementById("publishButton");
+
+          approveButton.classList.add("d-none");
+          publishButton.classList.add("d-none");
+
+          if (status === "pending") {
+            approveButton.classList.remove("d-none");
+          } else if (status === "approved") {
+            publishButton.classList.remove("d-none");
+          }
+        } catch (error) {
+          console.error("Error loading post content:", error);
+          showError(previewElement, "Failed to load content: " + error.message);
+        }
+      }
+
+      // Load suggested topics
+      async function loadSuggestedTopics() {
+        const topicsElement = document.getElementById("suggestedTopics");
+        showLoading(topicsElement, "Loading topics...");
+
+        try {
+          // Get used topics first
+          const usedResponse = await fetch("/api/topics?status=used");
+          const usedTopics = await usedResponse.json();
+          const usedTopicsSet = new Set(usedTopics);
+
+          // This would be a real API endpoint in production
+          const allSuggestedTopics = [
+            "AI-Powered Early Cancer Detection Systems",
+            "Streamlining Patient Data with LLMs",
+            "Ethical Considerations in Healthcare AI",
+            "Reducing Medical Errors with AI Diagnostics",
+            "Integrating AI into Clinical Workflows",
+          ];
+
+          // Filter out used topics
+          const availableTopics = allSuggestedTopics.filter(
+            (topic) => !usedTopicsSet.has(topic)
+          );
+
+          topicsElement.innerHTML = "";
+
+          if (availableTopics.length === 0) {
+            topicsElement.innerHTML =
+              '<p class="text-center text-muted p-2">No suggested topics available</p>';
+            return;
+          }
+
+          availableTopics.forEach((topic) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "list-group-item list-group-item-action";
+            button.textContent = topic;
+            button.addEventListener("click", () => {
+              document.getElementById("topicInput").value = topic;
+            });
+
+            topicsElement.appendChild(button);
+          });
+        } catch (error) {
+          console.error("Error loading topics:", error);
+          showError(topicsElement, "Failed to load topics: " + error.message);
+        }
+      }
+
+      // Generate a new blog post
+      async function generateBlogPost(topic) {
+        const statusElement = document.getElementById("generationStatus");
+        showLoading(statusElement, `Generating blog post about "${topic}"...`);
+
+        try {
+          const response = await fetch("/api/generate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ topic }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to generate blog post");
+          }
+
+          const data = await response.json();
+
+          // Reload posts to show the new one
+          await loadPosts();
+          // Refresh suggested topics since one was just used
+          await loadSuggestedTopics();
+          // Clear the topic input
+          document.getElementById("topicInput").value = "";
+
+          statusElement.innerHTML = `
+            <div class="alert alert-success">
+              <h5>Blog post generated successfully!</h5>
+              <p>Topic: ${data.topic}</p>
+              <p>An approval email has been sent.</p>
+            </div>
+          `;
+        } catch (error) {
+          console.error("Error generating blog post:", error);
+          showError(
+            statusElement,
+            "Failed to generate blog post: " + error.message
+          );
+        }
+      }
+
+      // Approve a blog post
+      async function approveBlogPost(filename) {
+        if (!confirm(`Are you sure you want to approve "${filename}"?`)) return;
+
+        const previewElement = document.getElementById("contentPreview");
+        showLoading(previewElement, "Approving post...");
+
+        try {
+          const response = await fetch(`/api/approve/${filename}`, {
+            method: "POST",
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to approve blog post");
+          }
+
+          // Reload posts and clear preview
+          await loadPosts();
+          previewElement.innerHTML =
+            '<p class="text-center text-muted">Post approved! Select another post to preview.</p>';
+          document.getElementById("contentActions").classList.add("d-none");
+        } catch (error) {
+          console.error("Error approving post:", error);
+          showError(previewElement, "Failed to approve post: " + error.message);
+        }
+      }
+
+      // Publish a blog post
+      async function publishBlogPost(filename) {
+        if (!confirm(`Are you sure you want to publish "${filename}"?`)) return;
+
+        const previewElement = document.getElementById("contentPreview");
+        showLoading(previewElement, "Publishing post...");
+
+        try {
+          const response = await fetch(`/api/publish/${filename}`, {
+            method: "POST",
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to publish blog post");
+          }
+
+          // Reload posts and clear preview
+          await loadPosts();
+          previewElement.innerHTML =
+            '<p class="text-center text-muted">Post published! Select another post to preview.</p>';
+          document.getElementById("contentActions").classList.add("d-none");
+        } catch (error) {
+          console.error("Error publishing post:", error);
+          showError(previewElement, "Failed to publish post: " + error.message);
+        }
+      }
+
+      // Event listeners
+      document
+        .getElementById("generateForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const topic = document.getElementById("topicInput").value.trim();
+          if (topic) {
+            generateBlogPost(topic);
+          } else {
+            alert("Please enter a topic or select one from the suggestions");
+          }
+        });
+
+      document
+        .getElementById("approveButton")
+        .addEventListener("click", function () {
+          if (currentFilename && currentStatus === "pending") {
+            approveBlogPost(currentFilename);
+          }
+        });
+
+      document
+        .getElementById("publishButton")
+        .addEventListener("click", function () {
+          if (currentFilename && currentStatus === "approved") {
+            publishBlogPost(currentFilename);
+          }
+        });
+
+      // Initialize the page
+      document.addEventListener("DOMContentLoaded", function () {
+        loadPosts();
+        loadSuggestedTopics();
+        initializeTopicManagement();
+        initializeAutomation();
+      });
+
+      // Topic Management Functions
+      async function initializeTopicManagement() {
+        try {
+          // Load cached topics
+          const response = await fetch("/api/topics?status=available");
+          const cachedTopics = await response.json();
+          updateCachedTopicsList(cachedTopics);
+
+          // Load used topics
+          const usedResponse = await fetch("/api/topics?status=used");
+          const usedTopics = await usedResponse.json();
+          updateUsedTopicsList(usedTopics);
+
+         
+
+          // Update topics count
+          document.getElementById(
+            "topicsCount"
+          ).textContent = `${cachedTopics.length} topics available`;
+        } catch (error) {
+          console.error("Error initializing topic management:", error);
+        }
+      }
+
+      function updateCachedTopicsList(topics) {
+        const container = document.getElementById("cachedTopics");
+        if (!topics || topics.length === 0) {
+          container.innerHTML =
+            '<p class="text-center text-muted p-2">No cached topics available</p>';
+          return;
+        }
+
+        container.innerHTML = topics
+          .map(
+            (topic) => `
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+          <span>${topic}</span>
+          <button class="btn btn-sm btn-outline-danger remove-topic-btn" data-topic="${topic}">
+            <small>Remove</small>
+          </button>
+        </div>
+      `
+          )
+          .join("");
+
+        // Add event listeners for remove buttons
+        container.querySelectorAll(".remove-topic-btn").forEach((btn) => {
+          btn.addEventListener("click", async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const topic = btn.getAttribute("data-topic");
+            console.log("Removing topic:", topic); // Debug log
+            try {
+              const response = await fetch(
+                "/api/topics/" + encodeURIComponent(topic),
+                {
+                  method: "DELETE",
+                }
+              );
+
+              if (!response.ok) {
+                throw new Error("Failed to remove topic");
+              }
+
+              await initializeTopicManagement(); // Refresh the lists
+            } catch (error) {
+              console.error("Error removing topic:", error);
+              alert("Failed to remove topic: " + error.message);
+            }
+          });
+        });
+      }
+
+      function updateUsedTopicsList(topics) {
+        const container = document.getElementById("usedTopics");
+        if (!topics || topics.length === 0) {
+          container.innerHTML =
+            '<p class="text-center text-muted p-2">No used topics</p>';
+          return;
+        }
+
+        container.innerHTML = topics
+          .map(
+            (topic) => `
+              <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>${topic}</span>
+                  <small class="text-muted">Used</small>
+                </div>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function updateTrendingTopicsList(topics) {
+        const container = document.getElementById("trendingTopics");
+        if (!topics || topics.length === 0) {
+          container.innerHTML =
+            '<p class="text-center text-muted p-2">No trending topics available</p>';
+          return;
+        }
+
+        container.innerHTML = topics
+          .map(
+            (topic) => `
+              <div class="list-group-item list-group-item-action">
+                <div class="topic-text">${topic}</div>
+                <small class="text-muted">Click to use this topic</small>
+              </div>
+            `
+          )
+          .join("");
+
+        // Add event listeners for topic selection
+        container
+          .querySelectorAll(".list-group-item-action")
+          .forEach((item) => {
+            item.addEventListener("click", () => {
+              const topicText = item.querySelector(".topic-text").textContent;
+              document.getElementById("topicInput").value = topicText;
+            });
+          });
+      }
+
+      // Add custom topic handler
+      document
+        .getElementById("addCustomTopicBtn")
+        .addEventListener("click", async () => {
+          const input = document.getElementById("customTopicInput");
+          const topic = input.value.trim();
+
+          if (!topic) {
+            alert("Please enter a topic");
+            return;
+          }
+
+          try {
+            const response = await fetch("/api/topics", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ topic }),
+            });
+
+            if (!response.ok) throw new Error("Failed to add custom topic");
+
+            input.value = "";
+            initializeTopicManagement(); // Refresh the lists
+          } catch (error) {
+            console.error("Error adding custom topic:", error);
+            alert("Failed to add custom topic: " + error.message);
+          }
+        });
+
+      // Add generate topics handler
+      document
+        .getElementById("generateTopicsBtn")
+        .addEventListener("click", async () => {
+          try {
+            const btn = document.getElementById("generateTopicsBtn");
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.innerHTML =
+              '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...';
+
+            const response = await fetch("/api/topics/generate", {
+              method: "POST",
+            });
+
+            if (!response.ok) throw new Error("Failed to generate topics");
+
+            await initializeTopicManagement(); // Refresh all lists
+
+            btn.disabled = false;
+            btn.textContent = originalText;
+          } catch (error) {
+            console.error("Error generating topics:", error);
+            alert("Failed to generate topics: " + error.message);
+          }
+        });
+
+      
+    </script>
+  </body>
+</html>

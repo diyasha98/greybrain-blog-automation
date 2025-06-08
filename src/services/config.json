@@ -1,0 +1,32 @@
+{
+  "personal_info": {
+    "email": "your-email@greybrain.ai",
+    "company": "GreyBrain.ai",
+    "domain": "https://greybrain.ai",
+    "approval_email": "your-email@gmail.com",
+    "notification_emails": ["team@greybrain.ai"]
+  },
+  "content_strategy": {
+    "primary_keywords": [
+      "LLM in healthcare",
+      "AI medical diagnosis",
+      "healthcare automation"
+    ],
+    "topics": {
+      "main_themes": [
+        "AI-Powered Diagnosis Systems",
+        "Patient Communication Automation",
+        "Healthcare Data Privacy with AI"
+      ]
+    }
+  },
+  "ai_providers": {
+    "primary": "groq",
+    "fallback": "openrouter"
+  },
+  "schedule": {
+    "enabled": true,
+    "daily_time": "10:56",
+    "timezone": "Asia/Calcutta"
+  }
+}
