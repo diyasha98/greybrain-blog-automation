@@ -162,3 +162,17 @@ export const updateBlogPost = catchAsync(async (req, res) => {
 
   ApiResponse.success(res, null, 'Blog post updated', 200);
 });
+
+export const deleteBlogPost = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || typeof id !== "string" || id.trim() === "") {
+    return ApiResponse.error(res, null, "Blog Id is required", 400);
+  }
+
+  await prisma.blogPost.delete({
+    where: { id },
+  });
+
+  ApiResponse.success(res, null, "Blog post deleted successfully", 200);
+});

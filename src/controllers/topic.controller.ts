@@ -104,3 +104,18 @@ export const generateTopics = catchAsync(async (req, res) => {
   // Respond with success
   ApiResponse.success(res, null, 'Topics Generated Successfully', 200);
 });
+
+export const deleteTopic = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || typeof id !== "string" || id.trim() === "") {
+    return ApiResponse.error(res, null, "Topic id is required", 400);
+  }
+
+  await prisma.topic.delete({
+    where: { id },
+  });
+
+  ApiResponse.success(res, null, "Topic deleted successfully", 200);
+});
+

@@ -1,11 +1,16 @@
 import express from 'express';
 
+import authRoute from './auth.routes';
 import blogRoute from './blog.route';
 import topicRoute from './topic.route';
 
 const router = express.Router();
 
 const defaultRoutes = [
+  {
+    path: '/auth',
+    route: authRoute,
+  },
   {
     path: '/blogs',
     route: blogRoute,

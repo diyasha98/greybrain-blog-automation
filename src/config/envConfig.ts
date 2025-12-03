@@ -14,4 +14,6 @@ export const env = cleanEnv(process.env, {
   GROQ_API_KEY: str(),
   OPENROUTER_API_KEY: str(),
   TOGETHER_API_KEY: str(),
+  AUTH_USERNAME: str(),
+  AUTH_PASSWORD: str(),
 });

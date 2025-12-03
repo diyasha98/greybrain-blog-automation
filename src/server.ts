@@ -13,18 +13,24 @@ const app: Express = express();
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(cors({
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Home route - serve dashboard.html
+// Root route - serve login.html
 app.get('/', (_req: Request, res: Response) => {
-  console.log(
-    'Serving dashboard from:',
-    path.join(__dirname, 'public', 'dashboard.html'),
-  );
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+// Dashboard route - redirect to React dev server
+app.get('/dashboard', (_req: Request, res: Response) => {
+  res.redirect('http://localhost:5173');
 });
 
 // API routes
